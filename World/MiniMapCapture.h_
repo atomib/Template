@@ -1,0 +1,37 @@
+#pragma once
+
+#include "Engine/SceneCapture2D.h"
+#include "MiniMapCapture.generated.h"
+
+UCLASS()
+class FPSTEMPLATE_API AMiniMapCapture : public ASceneCapture2D
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+		TArray<UTextureRenderTarget2D *> MiniMapTextures;
+
+	int32 RenderProgress;
+
+	int32 TicksSinceUpdate;
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = MiniMap)
+		TArray<float> FloorHeights;
+
+	AMiniMapCapture();
+
+	void BeginPlay() override;
+
+	void Tick(float DeltaTime) override;
+
+	void RenderNextTexture();
+
+	UFUNCTION(BlueprintPure, Category = MiniMap)
+		UTextureRenderTarget2D * GetTextureForFloor(int32 FloorIndex) const;
+
+	UFUNCTION(BlueprintPure, Category = MiniMap)
+		FVector2D GetMiniMapSize() const;
+	
+	
+};

@@ -1,0 +1,86 @@
+#include "FPSTemplate.h"
+#include "MiniMapCapture.h"
+#include "BaseWorldSettings.h"
+
+#define TicksPerCapture 2
+#define CaptureHeight 100000.f
+
+AMiniMapCapture::AMiniMapCapture()
+{
+	FloorHeights.Add(0.f);
+
+	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bAllowTickOnDedicatedServer = false;
+
+	static ConstructorHelpers::FObjectFinder<UTextureRenderTarget2D> NewRenderTarget(TEXT("TextureRenderTarget2D'/Game/FPSTemplate/HUD/Textures/MiniMap/MiniMapRenderTarget.MiniMapRenderTarget'"));
+	GetCaptureComponent2D()->TextureTarget = NewRenderTarget.Object;
+}
+
+void AMiniMapCapture::BeginPlay()
+{
+	Super::BeginPlay();
+
+	ABaseWorldSettings * WorldSettings = Cast<ABaseWorldSettings>(GetWorld()->GetWorldSettings());
+	if (WorldSettings && GetCaptureComponent2D()->TextureTarget)
+	{
+		MiniMapTextures.Add(GetCaptureComponent2D()->TextureTarget);
+		// Skip first one
+		for (int i = 1; i < FloorHeights.Num(); ++i)
+		{
+			UTextureRenderTarget2D * NewRenderTarget = DuplicateObject<UTextureRenderTarget2D>(GetCaptureComponent2D()->TextureTarget, NULL);
+			MiniMapTextures.Add(NewRenderTarget);
+		}
+
+		GNearClippingPlane = CaptureHeight;
+	}
+}
+
+void AMiniMapCapture::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (RenderProgress < MiniMapTextures.Num())
+	{
+		if (TicksSinceUpdate == TicksPerCapture)
+		{
+			RenderNextTexture();
+		}
+		else
+		{
+			TicksSinceUpdate++;
+		}
+	}
+	else
+	{
+		SetActorTickEnabled(false);
+		// Stop scene capture from render by setting the actor to invisible
+		SetActorHiddenInGame(true);
+		// Restore near clip plane
+		GConfig->GetFloat(TEXT("/Script/Engine.Engine"), TEXT("NearClipPlane"), GNearClippingPlane, GEngineIni);
+	}
+}
+
+void AMiniMapCapture::RenderNextTexture()
+{
+	GetCaptureComponent2D()->TextureTarget = MiniMapTextures[RenderProgress];
+	const FVector OldLocation = GetActorLocation();
+	SetActorLocation(FVector(OldLocation.X, OldLocation.Y, CaptureHeight + FloorHeights[RenderProgress]));
+	TicksSinceUpdate = 0;
+	RenderProgress++;
+}
+
+UTextureRenderTarget2D * AMiniMapCapture::GetTextureForFloor(int32 FloorIndex) const
+{
+	if (MiniMapTextures.IsValidIndex(FloorIndex))
+	{
+		return MiniMapTextures[FloorIndex];
+	}
+
+	return NULL;
+}
+
+FVector2D AMiniMapCapture::GetMiniMapSize() const
+{
+	// TODO
+	return FVector2D(20000.f, 20000.f);
+}
