@@ -1,0 +1,96 @@
+#pragma once
+
+#include "Projectiles/BaseProjectile.h"
+#include "Attachments/Sight.h"
+#include "Items/Item.h"
+#include "Object.h"
+#include "ItemLibrary.generated.h"
+
+USTRUCT()
+struct FItemLibraryProperties
+{
+	GENERATED_BODY()
+
+	// Icon to be displayed in HUD
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Defaults)
+		UTexture2D * Icon = NULL;
+};
+
+USTRUCT(BlueprintType)
+struct FItemProperties : public FItemLibraryProperties
+{
+	GENERATED_BODY()
+
+	// Class of item
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Defaults)
+		TSubclassOf<AItem> ItemClass;
+};
+
+USTRUCT(BlueprintType)
+struct FProjectileProperties : public FItemLibraryProperties
+{
+	GENERATED_BODY()
+
+		// Class of item
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Defaults)
+		TSubclassOf<ABaseProjectile> ProjectileClass;
+};
+
+USTRUCT(BlueprintType)
+struct FSightProperties : public FItemLibraryProperties
+{
+	GENERATED_BODY()
+
+	// Class of sight
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Defaults)
+		TSubclassOf<USight> SightClass;
+};
+
+USTRUCT(BlueprintType)
+struct FAttachmentProperties : public FItemLibraryProperties
+{
+	GENERATED_BODY()
+
+	// Class of attachment
+	// TODO: Use UAttachmentComponent class
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Defaults)
+		TSubclassOf<UObject> AttachmentClass;
+};
+
+USTRUCT(BlueprintType)
+struct FProjectileCollection
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Defaults)
+		FName CartridgeName;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Defaults)
+		TArray<FProjectileProperties> Projectiles;
+};
+
+// ItemLibrary stores static information about items, which can be set in editor and accessed via c++
+// To modify, open Items/BP_ItemLibrary in the editor
+UCLASS(Blueprintable)
+class FPSTEMPLATE_API UItemLibrary : public UObject
+{
+	GENERATED_BODY()
+	
+public:
+	// Array of items
+	UPROPERTY(EditDefaultsOnly, Category = Defaults)
+		TArray<FItemProperties> Items;
+
+	// Array of ammo classes
+	UPROPERTY(EditDefaultsOnly, Category = Defaults)
+		TArray<FProjectileCollection> ProjectileCollections;
+
+	// Array of all sights
+	UPROPERTY(EditDefaultsOnly, Category = Defaults)
+		TArray<FSightProperties> Sights;
+
+	// Array of attachments
+	UPROPERTY(EditDefaultsOnly, Category = Defaults)
+		TArray<FAttachmentProperties> Attachments;
+	
+};
